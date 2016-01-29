@@ -1,0 +1,2 @@
+# loungircbot
+A #loungecpp bot
