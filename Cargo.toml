@@ -1,0 +1,10 @@
+[package]
+name = "loungircbot"
+description = "A #loungecpp bot"
+readme = "README.md"
+license = "MIT"
+version = "0.1.0"
+authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
+
+[dependencies]
+irc = "0.9"

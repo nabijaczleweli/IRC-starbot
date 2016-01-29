@@ -1,0 +1,14 @@
+*
+!.gitignore
+!.travis.yml
+!appveyor.yml
+!LICENSE
+!README.md
+!Cargo.toml
+!*.sublime-project
+!src
+!src/**
+!res
+!res/**
+!example
+!example/**
