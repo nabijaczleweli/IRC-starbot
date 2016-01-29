@@ -20,18 +20,12 @@ fn main() {
 
 	for message in server.iter() {
 		if let Ok(message) = message {
-			let source_nickname = message.get_source_nickname().map(String::from);
+			let sender = message.get_source_nickname().map(String::from);
 
 			if let Ok(Command::PRIVMSG(target, msg)) = Command::from_message_io(Ok(message)) {
 				if (target == "NabBot" && msg == "Navaer") || msg == "Navaer, NabBot" {
-					server.send_privmsg(&*&source_nickname.unwrap_or(target), "Mára mesta").unwrap();
+					server.send_privmsg(&*sender.as_ref().unwrap_or(&target), "Mára mesta").unwrap();
 					server.send_quit("Mára mesta").unwrap();
-				} else if msg.contains("isn't") || msg.contains("is not") {
-					println!("{}: {:?} -> Not your face", source_nickname.as_ref().unwrap_or(&"???".to_string()), msg);
-					server.send_privmsg(&target, "Quite unlike your face").unwrap();
-				} else if msg.contains("sucks") || msg.contains("is") {
-					println!("{}: {:?} -> Your face", source_nickname.as_ref().unwrap_or(&"???".to_string()), msg);
-					server.send_privmsg(&target, "Much like your face").unwrap();
 				}
 			}
 		}
