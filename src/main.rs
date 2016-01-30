@@ -22,11 +22,16 @@ fn main() {
 		if let Ok(message) = message {
 			let sender = message.get_source_nickname().map(String::from);
 
-			if let Ok(Command::PRIVMSG(target, msg)) = Command::from_message_io(Ok(message)) {
-				if (target == "NabBot" && msg == "Navaer") || msg == "Navaer, NabBot" {
-					server.send_privmsg(&*sender.as_ref().unwrap_or(&target), "Mára mesta").unwrap();
-					server.send_quit("Mára mesta").unwrap();
+			match Command::from_message_io(Ok(message)) {
+				Ok(Command::JOIN(_, _, _))        => println!("I'm in"),
+				Ok(Command::PRIVMSG(target, msg)) => {
+					let to_self = target == "NabBot";
+
+					if (to_self && msg == "Navaer") || msg == "Navaer, NabBot" {
+						server.send_quit("Mára mesta").unwrap();
+					}
 				}
+				_ => (),
 			}
 		}
 	}
