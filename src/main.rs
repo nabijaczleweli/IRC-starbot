@@ -1,7 +1,11 @@
+extern crate regex;
 extern crate irc;
+
+mod starred_message;
 
 use irc::client::prelude::*;
 use std::default::Default;
+use starred_message::StarredMessage;
 
 
 fn main() {
@@ -29,6 +33,8 @@ fn main() {
 
 					if (to_self && msg == "Navaer") || msg == "Navaer, NabBot" {
 						server.send_quit("Mára mesta").unwrap();
+					} else if to_self && msg.starts_with("add ")  {
+						println!("{:?}", StarredMessage::from_message_content(&msg[4..], sender));
 					}
 				}
 				_ => (),
