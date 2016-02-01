@@ -24,3 +24,34 @@ impl StarredMessage {
 		Regex::new(r#"[[:blank:]]*<([[:alnum:]\[\]`_^{|}-]{0,16})>[[:blank:]]*(.+)[[:blank:]]*"#).unwrap()
 	}
 }
+
+
+mod tests {
+	use starred_message::StarredMessage;
+
+
+	#[test]
+	fn message_extracts_correctly() {
+		let msg = StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts".to_string(), None).unwrap();
+		assert_eq!(msg.sender, "nabijaczleweli");
+		assert_eq!(msg.message, "I only clean 'round these parts");
+	}
+
+	#[test]
+	fn message_fails_properly() {
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweclean 'round these parts".to_string(), None), None);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli>".to_string(), None), None);
+	}
+
+	#[test]
+	fn message_propagates_starrer() {
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts".to_string(), None).unwrap().starrer, None);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts".to_string(),
+		                                                Some("thecoshman".to_string())).unwrap().starrer, Some("thecoshman".to_string()));
+	}
+
+	#[test]
+	fn message_defaults_to_1_star() {
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts".to_string(), None).unwrap().stars, 1);
+	}
+}
