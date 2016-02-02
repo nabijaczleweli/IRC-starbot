@@ -22,6 +22,9 @@ fn main() {
 	}).unwrap();
 	server.identify().unwrap();
 
+
+	let mut starred: Vec<StarredMessage> = Vec::new();
+
 	for message in server.iter() {
 		if let Ok(message) = message {
 			let sender = message.get_source_nickname().map(String::from);
@@ -33,8 +36,19 @@ fn main() {
 
 					if (to_self && msg == "Navaer") || msg == "Navaer, NabBot" {
 						server.send_quit("Mára mesta").unwrap();
-					} else if to_self && msg.starts_with("add ")  {
-						println!("{:?}", StarredMessage::from_message_content(&msg[4..], sender));
+					} else if to_self && msg.starts_with("add ") {
+						if let Some(star_message) = StarredMessage::from_message_content(&msg[4..], sender) {
+							if match starred.iter_mut().find(|fmsg| (&fmsg.sender, &fmsg.message) == (&star_message.sender, &star_message.message)) {
+								Some(ref mut existing_message) => {
+									existing_message.stars += 1;
+									existing_message.starrers.extend(star_message.starrers.clone());
+									false
+								},
+								None => true,
+							} {
+								starred.push(star_message);  // Can't do it in match arm because it'd borrow starred as &mut twice
+							}
+						}
 					}
 				}
 				_ => (),
