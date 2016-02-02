@@ -1,21 +1,22 @@
 use regex::Regex;
+use std::iter::FromIterator;
 
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct StarredMessage {
-	pub starrer: Option<String>,
-	pub stars  : u64,
-	pub sender : String,
-	pub message: String,
+	pub starrers: Vec<String>,
+	pub stars   : u64,
+	pub sender  : String,
+	pub message : String,
 }
 
 impl StarredMessage {
 	pub fn from_message_content(message: &str, starrer: Option<String>) -> Option<StarredMessage> {
 		Self::regex().captures(message).map(move |captures| StarredMessage{
-			starrer: starrer,
-			stars  : 1u64,
-			sender : captures[1].to_string(),
-			message: captures[2].to_string(),
+			starrers: Vec::from_iter(starrer.into_iter()),
+			stars   : 1u64,
+			sender  : captures[1].to_string(),
+			message : captures[2].to_string(),
 		})
 	}
 
@@ -26,6 +27,7 @@ impl StarredMessage {
 }
 
 
+#[cfg(test)]
 mod tests {
 	use starred_message::StarredMessage;
 
@@ -45,9 +47,9 @@ mod tests {
 
 	#[test]
 	fn message_propagates_starrer() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", None).unwrap().starrer, None);
+		assert!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", None).unwrap().starrers.is_empty());
 		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts",
-		                                                Some("thecoshman".to_string())).unwrap().starrer, Some("thecoshman".to_string()));
+		                                                Some("thecoshman".to_string())).unwrap().starrers, vec!["thecoshman".to_string()]);
 	}
 
 	#[test]
