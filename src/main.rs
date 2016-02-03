@@ -49,6 +49,16 @@ fn main() {
 								starred.push(star_message);  // Can't do it in match arm because it'd borrow starred as &mut twice
 							}
 						}
+					} else if to_self && msg == "help" && sender.is_some() {
+						let sender = &*&sender.unwrap();
+
+						server.send_notice(sender, r#"Cummands:"#).unwrap();
+						server.send_notice(sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
+						server.send_notice(sender, r#"  "help" -- send this help notice to sender"#).unwrap();
+						server.send_notice(sender, r#"  "dump" -- dump all star data to sender"#).unwrap();
+						server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+					} else if to_self && msg == "dump" && sender.is_some() {
+						server.send_privmsg(&*&sender.unwrap(), &*&format!("{:?}", starred)).unwrap();
 					}
 				}
 				_ => (),
