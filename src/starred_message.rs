@@ -1,5 +1,4 @@
 use regex::Regex;
-use std::iter::FromIterator;
 
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
