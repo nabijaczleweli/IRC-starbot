@@ -49,6 +49,24 @@ fn main() {
 								starred.push(star_message);  // Can't do it in match arm because it'd borrow starred as &mut twice
 							}
 						}
+					} else if to_self && msg.starts_with("remove ") {
+						if let Some(star_message) = StarredMessage::from_message_content(&msg[7..], sender) {
+							if let Some(index) = match starred.iter_mut().enumerate().find(
+								|fmsg| (&fmsg.1.sender, &fmsg.1.message) == (&star_message.sender, &star_message.message)
+							) {
+								Some((idx, ref mut existing_message)) =>
+									if let Some(starrer_pos) = existing_message.starrers.iter().position(|starrer| starrer == &existing_message.starrers[0]) {
+										existing_message.stars -= 1;
+										existing_message.starrers.swap_remove(starrer_pos);
+										Some(idx)
+									} else {
+										None
+									},
+								None => None,
+							} {
+								starred.swap_remove(index);  // Can't do it in match arm because it'd borrow starred as &mut twice
+							}
+						}
 					} else if to_self && msg == "help" && sender.is_some() {
 						let sender = &*&sender.unwrap();
 
