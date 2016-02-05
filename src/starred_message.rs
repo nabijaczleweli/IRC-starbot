@@ -12,16 +12,12 @@ pub struct StarredMessage {
 
 impl StarredMessage {
 	pub fn from_message_content(message: &str, starrer: Option<String>) -> Option<StarredMessage> {
-		match starrer {
-			Some(starrer) =>
-				Self::regex().captures(message).map(move |captures| StarredMessage{
-					starrers: vec![starrer],
-					stars   : 1u64,
-					sender  : captures[1].to_string(),
-					message : captures[2].to_string(),
-				}),
-			None => None,
-		}
+		starrer.and_then(move |starrer| Self::regex().captures(message).map(move |captures| StarredMessage{
+			starrers: vec![starrer],
+			stars   : 1u64,
+			sender  : captures[1].to_string(),
+			message : captures[2].to_string(),
+		}))
 	}
 
 
