@@ -67,15 +67,29 @@ fn main() {
 								starred.swap_remove(index);  // Can't do it in match arm because it'd borrow starred as &mut twice
 							}
 						}
-					} else if to_self && msg == "help" && sender.is_some() {
+					} else if to_self && msg.ends_with("help") && sender.is_some() {
 						let sender = &*&sender.unwrap();
+						let msg = msg.trim();
 
-						server.send_notice(sender, r#"Cummands:"#).unwrap();
-						server.send_notice(sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
-						server.send_notice(sender, r#"  "help" -- send this help notice to sender"#).unwrap();
-						server.send_notice(sender, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
-						server.send_notice(sender, r#"  "dump" -- dump all star data to sender"#).unwrap();
-						server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+						let level = msg.find("help").unwrap();
+						if msg[..level].chars().all(|c| c == '_') {
+							server.send_notice(sender, r#"Cummands, level 0:"#).unwrap();
+							server.send_notice(sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
+							server.send_notice(sender, r#"  "help" -- send this help notice to sender"#).unwrap();
+							server.send_notice(sender, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
+							server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+							if level >= 1 {
+								server.send_notice(sender, r#"Cummands, level 1:"#).unwrap();
+								server.send_notice(sender, r#"  "Navaer" -- murder NabBot"#).unwrap();
+								server.send_notice(sender, r#"  "_dump" -- dump raw star data to sender"#).unwrap();
+								server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+							}
+							if level >= 2 {
+								server.send_notice(sender, r#"Cummands, level 2:"#).unwrap();
+								server.send_notice(sender, r#"  "Navaer, NabBot" -- murder NabBot"#).unwrap();
+								server.send_notice(sender, r#"Execute via sending a PRIVMSG any channel NabBot is listening to"#).unwrap();
+							}
+						}
 					} else if to_self && msg == "board" && sender.is_some() {
 						let sender = &*&sender.unwrap();
 						let mut sorted_stars = starred.clone();
@@ -84,7 +98,7 @@ fn main() {
 						for message in sorted_stars.iter().take(10) {
 							server.send_notice(sender, &*&format!("{}", message)).unwrap();
 						}
-					} else if to_self && msg == "dump" && sender.is_some() {
+					} else if to_self && msg == "_dump" && sender.is_some() {
 						server.send_privmsg(&*&sender.unwrap(), &*&format!("{:?}", starred)).unwrap();
 					}
 				}
