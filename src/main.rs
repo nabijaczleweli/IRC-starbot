@@ -11,13 +11,13 @@ use starred_message::StarredMessage;
 fn main() {
 	let server = IrcServer::from_config(Config{
 		owners   : Some(vec!["nabijaczleweli".to_string()]),
-		nickname : Some("NabBot".to_string()),
-		username : Some("NabBot".to_string()),
-		realname : Some("наб's IRC bot".to_string()),
+		nickname : Some("StarBot".to_string()),
+		username : Some("StarBot".to_string()),
+		realname : Some("Bot for handling stars, Snackchat-style".to_string()),
 		server   : Some("chat.freenode.net".to_string()),
 		use_ssl  : Some(true),
 		channels : Some(vec!["#loungecpp".to_string()]),
-		user_info: Some("наб's IRC bot".to_string()),
+		user_info: Some("Bot for handling stars, Snackchat-style. /msg it with \"help\" for guidance".to_string()),
 		..Default::default()
 	}).unwrap();
 	server.identify().unwrap();
@@ -32,9 +32,9 @@ fn main() {
 			match Command::from_message_io(Ok(message)) {
 				Ok(Command::JOIN(_, _, _))        => println!("I'm in"),
 				Ok(Command::PRIVMSG(target, msg)) => {
-					let to_self = target == "NabBot";
+					let to_self = target == "StarBot";
 
-					if (to_self && msg == "Navaer") || msg == "Navaer, NabBot" {
+					if (to_self && msg == "Navaer") || msg == "Navaer, StarBot" {
 						server.send_quit("Mára mesta").unwrap();
 					} else if to_self && msg.starts_with("add ") {
 						if let Some(star_message) = StarredMessage::from_message_content(&msg[4..], sender) {
@@ -77,17 +77,17 @@ fn main() {
 							server.send_notice(sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
 							server.send_notice(sender, r#"  "help" -- send this help notice to sender"#).unwrap();
 							server.send_notice(sender, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
-							server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+							server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
 							if level >= 1 {
 								server.send_notice(sender, r#"Cummands, level 1:"#).unwrap();
-								server.send_notice(sender, r#"  "Navaer" -- murder NabBot"#).unwrap();
+								server.send_notice(sender, r#"  "Navaer" -- murder StarBot"#).unwrap();
 								server.send_notice(sender, r#"  "_dump" -- dump raw star data to sender"#).unwrap();
-								server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+								server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
 							}
 							if level >= 2 {
 								server.send_notice(sender, r#"Cummands, level 2:"#).unwrap();
-								server.send_notice(sender, r#"  "Navaer, NabBot" -- murder NabBot"#).unwrap();
-								server.send_notice(sender, r#"Execute via sending a PRIVMSG any channel NabBot is listening to"#).unwrap();
+								server.send_notice(sender, r#"  "Navaer, StarBot" -- murder StarBot"#).unwrap();
+								server.send_notice(sender, r#"Execute via sending a PRIVMSG any channel StarBot is listening to"#).unwrap();
 							}
 						}
 					} else if to_self && msg == "board" && sender.is_some() {
