@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::fmt;
 
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -22,6 +23,12 @@ impl StarredMessage {
 
 	fn regex() -> Regex {
 		Regex::new(r#"[[:blank:]]*<([[:alnum:]\[\]`_^{|}-]{0,16})>[[:blank:]]*(.+)[[:blank:]]*"#).unwrap()
+	}
+}
+
+impl fmt::Display for StarredMessage {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}★ <{}> {}", self.stars, self.sender, self.message)
 	}
 }
 
@@ -54,5 +61,11 @@ mod tests {
 	#[test]
 	fn message_defaults_to_1_star() {
 		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", Some("thecoshman".to_string())).unwrap().stars, 1);
+	}
+
+	#[test]
+	fn format() {
+		assert_eq!(format!("{}", StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", Some("thecoshman".to_string())).unwrap()),
+		           "1★ <nabijaczleweli> I only clean 'round these parts".to_string());
 	}
 }

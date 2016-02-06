@@ -73,8 +73,17 @@ fn main() {
 						server.send_notice(sender, r#"Cummands:"#).unwrap();
 						server.send_notice(sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
 						server.send_notice(sender, r#"  "help" -- send this help notice to sender"#).unwrap();
+						server.send_notice(sender, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
 						server.send_notice(sender, r#"  "dump" -- dump all star data to sender"#).unwrap();
 						server.send_notice(sender, r#"Execute via sending a PRIVMSG (as by "/msg") to NabBot"#).unwrap();
+					} else if to_self && msg == "board" && sender.is_some() {
+						let sender = &*&sender.unwrap();
+						let mut sorted_stars = starred.clone();
+						sorted_stars.sort_by(|lhs, rhs| lhs.stars.cmp(&rhs.stars));
+
+						for message in sorted_stars.iter().take(10) {
+							server.send_notice(sender, &*&format!("{}", message)).unwrap();
+						}
 					} else if to_self && msg == "dump" && sender.is_some() {
 						server.send_privmsg(&*&sender.unwrap(), &*&format!("{:?}", starred)).unwrap();
 					}
