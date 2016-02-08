@@ -11,13 +11,13 @@ pub struct StarredMessage {
 }
 
 impl StarredMessage {
-	pub fn from_message_content(message: &str, starrer: Option<String>) -> Option<StarredMessage> {
-		starrer.and_then(move |starrer| Self::regex().captures(message).map(move |captures| StarredMessage{
-			starrers: vec![starrer],
+	pub fn from_message_content(message: &str, starrer: &str) -> Option<StarredMessage> {
+		Self::regex().captures(message).map(move |captures| StarredMessage{
+			starrers: vec![starrer.to_string()],
 			stars   : 1u64,
 			sender  : captures[1].to_string(),
 			message : captures[2].to_string(),
-		}))
+		})
 	}
 
 
@@ -40,32 +40,30 @@ mod tests {
 
 	#[test]
 	fn message_extracts_correctly() {
-		let msg = StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", Some("thecoshman".to_string())).unwrap();
+		let msg = StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap();
 		assert_eq!(msg.sender, "nabijaczleweli");
 		assert_eq!(msg.message, "I only clean 'round these parts");
 	}
 
 	#[test]
 	fn message_fails_properly() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweclean 'round these parts", Some("thecoshman".to_string())), None);
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli>", Some("thecoshman".to_string())), None);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweclean 'round these parts", "thecoshman"), None);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli>", "thecoshman"), None);
 	}
 
 	#[test]
 	fn message_propagates_starrer() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", None), None);
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts",
-		                                                Some("thecoshman".to_string())).unwrap().starrers, vec!["thecoshman".to_string()]);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap().starrers, vec!["thecoshman"]);
 	}
 
 	#[test]
 	fn message_defaults_to_1_star() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", Some("thecoshman".to_string())).unwrap().stars, 1);
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap().stars, 1);
 	}
 
 	#[test]
 	fn format() {
-		assert_eq!(format!("{}", StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", Some("thecoshman".to_string())).unwrap()),
+		assert_eq!(format!("{}", StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap()),
 		           "1★ <nabijaczleweli> I only clean 'round these parts".to_string());
 	}
 }
