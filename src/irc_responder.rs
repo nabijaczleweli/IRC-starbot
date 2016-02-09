@@ -29,35 +29,19 @@ impl IrcResponder {
 					},
 				Ok((Command::PRIVMSG(target, msg), sender)) => {
 					match (&target[..], &msg[..], sender.as_ref().map(|s| &s[..])) {
-						(_,         "Navaer, StarBot",  _) => self.quit(),
-						("StarBot", "Navaer",           _) => self.quit(),
-						("StarBot", "board", Some(sender)) => {
+						(_,         "Navaer, StarBot",   _) => self.quit(),
+						("StarBot", "Navaer",            _) => self.quit(),
+						("StarBot", "help",   Some(sender)) => self.help(&*&sender, 0),
+						("StarBot", "_help",  Some(sender)) => self.help(&*&sender, 1),
+						("StarBot", "__help", Some(sender)) => self.help(&*&sender, 2),
+						("StarBot", "_dump",  Some(sender)) => self.server.send_privmsg(&*&sender, &*&format!("{:?}", starred)).unwrap(),
+						("StarBot", "board",  Some(sender)) => {
 							let mut sorted_stars = starred.clone();
 							sorted_stars.sort_by(|lhs, rhs| lhs.stars.cmp(&rhs.stars));
 
 							for message in sorted_stars.iter().take(10) {
 								self.server.send_notice(&*&sender, &*&format!("{}", message)).unwrap();
 							}
-						},
-						("StarBot", "_dump", Some(sender)) => self.server.send_privmsg(&*&sender, &*&format!("{:?}", starred)).unwrap(),
-						("StarBot", "help",  Some(sender)) => {
-							self.server.send_notice(&*&sender, r#"Cummands, level 0:"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "remove <" username ">" message content -- remove your star from a message"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "help" -- send this help notice to sender"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
-							self.server.send_notice(&*&sender, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
-						},
-						("StarBot", "_help", Some(sender)) => {
-							self.server.send_notice(&*&sender, r#"Cummands, level 1:"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "Navaer" -- murder StarBot"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "_dump" -- dump raw star data to sender"#).unwrap();
-							self.server.send_notice(&*&sender, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
-						},
-						("StarBot", "__help", Some(sender)) => {
-							self.server.send_notice(&*&sender, r#"Cummands, level 2:"#).unwrap();
-							self.server.send_notice(&*&sender, r#"  "Navaer, StarBot" -- murder StarBot"#).unwrap();
-							self.server.send_notice(&*&sender, r#"Execute via sending a PRIVMSG any channel StarBot is listening to"#).unwrap();
 						},
 						("StarBot", msg, Some(sender)) => {
 							if msg.starts_with("add ") {
@@ -103,5 +87,27 @@ impl IrcResponder {
 
 	fn quit(&self) {
 		self.server.send_quit("Mára mesta").unwrap();
+	}
+
+	fn help(&self, whom: &str, level: i32) {
+		self.server.send_notice(whom, r#"Cummands, level 0:"#).unwrap();
+		self.server.send_notice(whom, r#"  "add <" username ">" message content -- add your star to a message"#).unwrap();
+		self.server.send_notice(whom, r#"  "remove <" username ">" message content -- remove your star from a message"#).unwrap();
+		self.server.send_notice(whom, r#"  "help" -- send this help notice to sender"#).unwrap();
+		self.server.send_notice(whom, r#"  "board" -- pretty-print the starboard, snackchat-style"#).unwrap();
+		self.server.send_notice(whom, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
+
+		if level >= 1 {
+			self.server.send_notice(whom, r#"Cummands, level 1:"#).unwrap();
+			self.server.send_notice(whom, r#"  "Navaer" -- murder StarBot"#).unwrap();
+			self.server.send_notice(whom, r#"  "_dump" -- dump raw star data to sender"#).unwrap();
+			self.server.send_notice(whom, r#"Execute via sending a PRIVMSG (as by "/msg") to StarBot"#).unwrap();
+		}
+
+		if level >= 2 {
+			self.server.send_notice(whom, r#"Cummands, level 2:"#).unwrap();
+			self.server.send_notice(whom, r#"  "Navaer, StarBot" -- murder StarBot"#).unwrap();
+			self.server.send_notice(whom, r#"Execute via sending a PRIVMSG any channel StarBot is listening to"#).unwrap();
+		}
 	}
 }
