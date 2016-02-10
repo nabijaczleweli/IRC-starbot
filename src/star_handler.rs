@@ -33,36 +33,47 @@ impl StarHandler {
 
 	pub fn add_star(&mut self, starrer: &str, message: &str) {
 		if let Some(star_message) = StarredMessage::from_message_content(message, starrer) {
-			if match self.starred.iter_mut().find(|fmsg| (&fmsg.sender, &fmsg.message) == (&star_message.sender, &star_message.message)) {
-				Some(ref mut existing_message) => {
-					existing_message.stars += 1;
-					existing_message.starrers.extend(star_message.starrers.clone());
-					false
-				},
-				None => true,
-			} {
-				self.starred.push(star_message);  // Can't do it in match arm because it'd borrow starred as &mut twice
+			if let Some(star_message) = self.maybe_increase_starcount(star_message) {
+				self.starred.push(star_message);
 			}
 		}
 	}
 
 	pub fn remove_star(&mut self, starrer: &str, message: &str) {
 		if let Some(star_message) = StarredMessage::from_message_content(message, starrer) {
-			if let Some(index) = match self.starred.iter_mut().enumerate().find(
-				|fmsg| (&fmsg.1.sender, &fmsg.1.message) == (&star_message.sender, &star_message.message)
-			) {
-				Some((idx, ref mut existing_message)) =>
-					if let Some(starrer_pos) = existing_message.starrers.iter().position(|starrer| starrer == &existing_message.starrers[0]) {
-						existing_message.stars -= 1;
-						existing_message.starrers.swap_remove(starrer_pos);
-						Some(idx)
-					} else {
-						None
-					},
-				None => None,
-			} {
-				self.starred.swap_remove(index);  // Can't do it in match arm because it'd borrow starred as &mut twice
+			if let Some(index) = self.maybe_decrease_starcount(star_message) {
+				self.starred.swap_remove(index);
 			}
 		}
+	}
+
+
+	/// Incease the star count on an existing equivalent message or return the message for it to be added.
+	fn maybe_increase_starcount(&mut self, to_star: StarredMessage) -> Option<StarredMessage> {
+		match self.starred.iter_mut().find(|fmsg| (&fmsg.sender, &fmsg.message) == (&to_star.sender, &to_star.message)) {
+			Some(ref mut existing_message) => {
+				existing_message.stars += 1;
+				existing_message.starrers.extend(to_star.starrers.clone());
+				None
+			},
+			None => Some(to_star),
+		}
+	}
+
+	/// Decrease the star count and remove the starrer from an existing equivalent message and return the message's index if it has 0 stars after decreasing.
+	fn maybe_decrease_starcount(&mut self, to_unstar: StarredMessage) -> Option<usize> {
+		self.starred.iter_mut().enumerate().find(
+			|fmsg| (&fmsg.1.sender, &fmsg.1.message) == (&to_unstar.sender, &to_unstar.message)
+		).and_then(|(idx, ref mut existing_message)|
+			existing_message.starrers.iter().position(|starrer| starrer == &to_unstar.starrers[0]).and_then(|starrer_pos|
+				if existing_message.stars == 1 {
+					Some(idx)
+				} else {
+					existing_message.stars -= 1;
+					existing_message.starrers.swap_remove(starrer_pos);
+					None
+				}
+			)
+		)
 	}
 }
