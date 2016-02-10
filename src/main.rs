@@ -1,4 +1,5 @@
 extern crate regex;
+extern crate rand;
 extern crate irc;
 
 mod star_handler;

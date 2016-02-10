@@ -1,4 +1,5 @@
 use starred_message::StarredMessage;
+use rand::{Rng, thread_rng};
 use irc::client::prelude::*;
 use irc::client::server::NetIrcServer;
 use std::sync::Arc;
@@ -23,11 +24,22 @@ impl StarHandler {
 	}
 
 	pub fn show_board(&self, to: &str) {
-		let mut sorted_stars = self.starred.clone();
-		sorted_stars.sort_by(|lhs, rhs| lhs.stars().cmp(&rhs.stars()));
+		static EMPTY_STARBOARD_RESPONSES: &'static [&'static str] = &[
+			"There's nothing here. Star something!",
+			"Michael, there's no stars here, mate. It's an empty board!",
+			"ALL YOUR STARS ARE BELONG TO U... You don't have any stars? Oh, very well.",
+			">tfw no stars",
+		];
 
-		for message in sorted_stars.iter().take(10) {
-			self.server.send_notice(to, &*&format!("{}", message)).unwrap();
+		if self.starred.is_empty() {
+			self.server.send_notice(to, thread_rng().choose(EMPTY_STARBOARD_RESPONSES).unwrap()).unwrap();
+		} else {
+			let mut sorted_stars = self.starred.clone();
+			sorted_stars.sort_by(|lhs, rhs| lhs.stars().cmp(&rhs.stars()));
+
+			for message in sorted_stars.iter().take(10) {
+				self.server.send_notice(to, &*&format!("{}", message)).unwrap();
+			}
 		}
 	}
 
