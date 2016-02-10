@@ -1,26 +1,27 @@
 use command_with_sender_iter::CommandWithSenderIterable;
-use starred_message::StarredMessage;
+use star_handler::StarHandler;
 use irc::client::prelude::*;
 use irc::client::server::NetIrcServer;
+use std::sync::Arc;
 
 
 pub struct IrcResponder {
-	server: NetIrcServer,
+	starboard: StarHandler,
+	server   : Arc<NetIrcServer>,
 }
 
 impl IrcResponder {
 	pub fn from_config(config: Config) -> IrcResponder {
-		let server = IrcServer::from_config(config).unwrap();
+		let server = Arc::new(IrcServer::from_config(config).unwrap());
 		server.identify().unwrap();
 
 		IrcResponder{
-			server: server,
+			starboard: StarHandler::new(&server),
+			server   : server,
 		}
 	}
 
 	pub fn handle(&mut self) {
-		let mut starred: Vec<StarredMessage> = Vec::new();
-
 		for message in self.server.iter_cmd_sender() {
 			match message {
 				Ok((Command::JOIN(_, _, _), Some(sender))) =>
@@ -34,49 +35,14 @@ impl IrcResponder {
 						("StarBot", "help",   Some(sender)) => self.help(&*&sender, 0),
 						("StarBot", "_help",  Some(sender)) => self.help(&*&sender, 1),
 						("StarBot", "__help", Some(sender)) => self.help(&*&sender, 2),
-						("StarBot", "_dump",  Some(sender)) => self.server.send_privmsg(&*&sender, &*&format!("{:?}", starred)).unwrap(),
-						("StarBot", "board",  Some(sender)) => {
-							let mut sorted_stars = starred.clone();
-							sorted_stars.sort_by(|lhs, rhs| lhs.stars.cmp(&rhs.stars));
-
-							for message in sorted_stars.iter().take(10) {
-								self.server.send_notice(&*&sender, &*&format!("{}", message)).unwrap();
-							}
-						},
-						("StarBot", msg, Some(sender)) => {
+						("StarBot", "_dump",  Some(sender)) => self.starboard.dump(sender),
+						("StarBot", "board",  Some(sender)) => self.starboard.show_board(sender),
+						("StarBot", msg,      Some(sender)) =>
 							if msg.starts_with("add ") {
-								if let Some(star_message) = StarredMessage::from_message_content(&msg[4..], sender) {
-									if match starred.iter_mut().find(|fmsg| (&fmsg.sender, &fmsg.message) == (&star_message.sender, &star_message.message)) {
-										Some(ref mut existing_message) => {
-											existing_message.stars += 1;
-											existing_message.starrers.extend(star_message.starrers.clone());
-											false
-										},
-										None => true,
-									} {
-										starred.push(star_message);  // Can't do it in match arm because it'd borrow starred as &mut twice
-									}
-								}
+								self.starboard.add_star(sender, &msg[4..])
 							} else if msg.starts_with("remove ") {
-								if let Some(star_message) = StarredMessage::from_message_content(&msg[7..], sender) {
-									if let Some(index) = match starred.iter_mut().enumerate().find(
-										|fmsg| (&fmsg.1.sender, &fmsg.1.message) == (&star_message.sender, &star_message.message)
-									) {
-										Some((idx, ref mut existing_message)) =>
-											if let Some(starrer_pos) = existing_message.starrers.iter().position(|starrer| starrer == &existing_message.starrers[0]) {
-												existing_message.stars -= 1;
-												existing_message.starrers.swap_remove(starrer_pos);
-												Some(idx)
-											} else {
-												None
-											},
-										None => None,
-									} {
-										starred.swap_remove(index);  // Can't do it in match arm because it'd borrow starred as &mut twice
-									}
-								}
-							}
-						},
+								self.starboard.remove_star(sender, &msg[7..])
+							},
 						_ => (),
 					}
 				},

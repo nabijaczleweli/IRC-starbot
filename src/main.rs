@@ -1,6 +1,7 @@
 extern crate regex;
 extern crate irc;
 
+mod star_handler;
 mod irc_responder;
 mod starred_message;
 mod command_with_sender_iter;
