@@ -24,7 +24,7 @@ impl StarHandler {
 
 	pub fn show_board(&self, to: &str) {
 		let mut sorted_stars = self.starred.clone();
-		sorted_stars.sort_by(|lhs, rhs| lhs.stars.cmp(&rhs.stars));
+		sorted_stars.sort_by(|lhs, rhs| lhs.stars().cmp(&rhs.stars()));
 
 		for message in sorted_stars.iter().take(10) {
 			self.server.send_notice(to, &*&format!("{}", message)).unwrap();
@@ -52,8 +52,7 @@ impl StarHandler {
 	fn maybe_increase_starcount(&mut self, to_star: StarredMessage) -> Option<StarredMessage> {
 		match self.starred.iter_mut().find(|fmsg| (&fmsg.sender, &fmsg.message) == (&to_star.sender, &to_star.message)) {
 			Some(ref mut existing_message) => {
-				existing_message.stars += 1;
-				existing_message.starrers.extend(to_star.starrers.clone());
+				existing_message.starrers.extend(to_star.starrers);
 				None
 			},
 			None => Some(to_star),
@@ -65,15 +64,11 @@ impl StarHandler {
 		self.starred.iter_mut().enumerate().find(
 			|fmsg| (&fmsg.1.sender, &fmsg.1.message) == (&to_unstar.sender, &to_unstar.message)
 		).and_then(|(idx, ref mut existing_message)|
-			existing_message.starrers.iter().position(|starrer| starrer == &to_unstar.starrers[0]).and_then(|starrer_pos|
-				if existing_message.stars == 1 {
-					Some(idx)
-				} else {
-					existing_message.stars -= 1;
-					existing_message.starrers.swap_remove(starrer_pos);
-					None
-				}
-			)
+			if existing_message.starrers.remove(to_unstar.starrers.iter().next().unwrap()) && existing_message.stars() == 0 {
+				Some(idx)
+			} else {
+				None
+			}
 		)
 	}
 }

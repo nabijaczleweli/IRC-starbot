@@ -1,23 +1,29 @@
 use regex::Regex;
+use std::collections::btree_set::BTreeSet;
 use std::fmt;
 
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct StarredMessage {
-	pub starrers: Vec<String>,
-	pub stars   : u64,
+	pub starrers: BTreeSet<String>,
 	pub sender  : String,
 	pub message : String,
 }
 
 impl StarredMessage {
 	pub fn from_message_content(message: &str, starrer: &str) -> Option<StarredMessage> {
+		let mut starrers = BTreeSet::new();
+		starrers.insert(starrer.to_string());
+
 		Self::regex().captures(message).map(move |captures| StarredMessage{
-			starrers: vec![starrer.to_string()],
-			stars   : 1u64,
+			starrers: starrers,
 			sender  : captures[1].to_string(),
 			message : captures[2].to_string(),
 		})
+	}
+
+	pub fn stars(&self) -> u64 {
+		self.starrers.len() as u64
 	}
 
 
@@ -28,7 +34,7 @@ impl StarredMessage {
 
 impl fmt::Display for StarredMessage {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{}★ <{}> {}", self.stars, self.sender, self.message)
+		write!(f, "{}★ <{}> {}", self.stars(), self.sender, self.message)
 	}
 }
 
@@ -36,6 +42,7 @@ impl fmt::Display for StarredMessage {
 #[cfg(test)]
 mod tests {
 	use starred_message::StarredMessage;
+	use std::collections::btree_set::BTreeSet;
 
 
 	#[test]
@@ -53,12 +60,21 @@ mod tests {
 
 	#[test]
 	fn message_propagates_starrer() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap().starrers, vec!["thecoshman"]);
+		let mut starrers = BTreeSet::new();
+		starrers.insert("thecoshman".to_string());
+
+		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap().starrers, starrers);
 	}
 
 	#[test]
-	fn message_defaults_to_1_star() {
-		assert_eq!(StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap().stars, 1);
+	fn stars_grow_with_starrers() {
+		let mut message = StarredMessage::from_message_content("<nabijaczleweli> I only clean 'round these parts", "thecoshman").unwrap();
+		assert_eq!(message.stars(), 1);
+
+		for (i, n) in ["CatPlusPlus", "pirate", "ely-se"].iter().enumerate() {
+			message.starrers.insert(n.to_string());
+			assert_eq!(message.stars(), (i + 2) as u64);
+		}
 	}
 
 	#[test]
