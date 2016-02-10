@@ -1,5 +1,5 @@
 [package]
-name = "IRC-starbot"
+name = "irc-starbot"
 description = "An IRC bot for handling message stars"
 readme = "README.md"
 license = "MIT"
