@@ -4,7 +4,7 @@
 		{
 			"working_dir": "$project_path",
 			"shell_cmd": "cargo test --color always",
-			"name": "Build loungircbot",
+			"name": "Build IRC-starbot",
 
 			"target": "ansi_color_build",
 			"syntax": "Packages/ANSIescape/ANSI.tmLanguage"

@@ -1,6 +1,6 @@
 [package]
-name = "loungircbot"
-description = "A #loungecpp bot"
+name = "IRC-starbot"
+description = "An IRC bot for handling message stars"
 readme = "README.md"
 license = "MIT"
 version = "0.1.0"
