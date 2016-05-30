@@ -1,13 +1,12 @@
 use command_with_sender_iter::CommandWithSenderIterable;
 use star_handler::StarHandler;
 use irc::client::prelude::*;
-use irc::client::server::NetIrcServer;
 use std::sync::Arc;
 
 
 pub struct IrcResponder {
 	starboard: StarHandler,
-	server   : Arc<NetIrcServer>,
+	server   : Arc<IrcServer>,
 }
 
 impl IrcResponder {

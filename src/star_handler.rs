@@ -1,17 +1,16 @@
 use starred_message::StarredMessage;
 use rand::{Rng, thread_rng};
 use irc::client::prelude::*;
-use irc::client::server::NetIrcServer;
 use std::sync::Arc;
 
 
 pub struct StarHandler {
-	server : Arc<NetIrcServer>,
+	server : Arc<IrcServer>,
 	starred: Vec<StarredMessage>,
 }
 
 impl StarHandler {
-	pub fn new(server: &Arc<NetIrcServer>) -> StarHandler {
+	pub fn new(server: &Arc<IrcServer>) -> StarHandler {
 		StarHandler{
 			server : server.clone(),
 			starred: Vec::new(),
